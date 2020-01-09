@@ -528,7 +528,7 @@ s.score = 90
 
 ## 面向对象高级编程
 
-### \__slots\__  
+### \__slots\__
 
 限制该class实例能添加的属性：
 
@@ -769,7 +769,7 @@ pickle.dump
 pickle.load
 ```
 
-#### json 
+#### json
 
 ```
 json.dumps
