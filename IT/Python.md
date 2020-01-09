@@ -528,7 +528,7 @@ s.score = 90
 
 ## 面向对象高级编程
 
-### \__slots\__  
+### \__slots\__
 
 限制该class实例能添加的属性：
 
@@ -769,7 +769,7 @@ pickle.dump
 pickle.load
 ```
 
-#### json 
+#### json
 
 ```
 json.dumps
@@ -783,3 +783,140 @@ json反序列化成对象
 >>> print(json.loads(json_str, object_hook=dict2student))
 <__main__.Student object at 0x10cd3c190>
 ```
+
+
+
+## 进程和线程
+
+### [多进程](https://www.liaoxuefeng.com/wiki/1016959663602400/1017628290184064)
+
+#### fork()
+
+Unix/Linux操作系统提供了一个`fork()`系统调用，它非常特殊。普通的函数调用，调用一次，返回一次，但是`fork()`调用一次，返回两次，因为操作系统自动把当前进程（称为父进程）复制了一份（称为子进程），然后，分别在父进程和子进程内返回。
+
+子进程永远返回`0`，而父进程返回子进程的ID。这样做的理由是，一个父进程可以fork出很多子进程，所以，父进程要记下每个子进程的ID，而子进程只需要调用`getppid()`就可以拿到父进程的ID。
+
+```
+import os
+
+print('Process (%s) start...' % os.getpid())
+# Only works on Unix/Linux/Mac:
+pid = os.fork()
+if pid == 0:
+    print('I am child process (%s) and my parent is %s.' % (os.getpid(), os.getppid()))
+else:
+    print('I (%s) just created a child process (%s).' % (os.getpid(), pid))
+```
+
+运行结果如下：
+
+```
+Process (876) start...
+I (876) just created a child process (877).
+I am child process (877) and my parent is 876.
+```
+
+#### multiprocessing 跨平台支持多进程
+
+`multiprocessing`模块提供了一个`Process`类来代表一个进程对象，下面的例子演示了启动一个子进程并等待其结束：
+
+```
+from multiprocessing import Process
+import os
+
+# 子进程要执行的代码
+def run_proc(name):
+    print('Run child process %s (%s)...' % (name, os.getpid()))
+
+if __name__=='__main__':
+    print('Parent process %s.' % os.getpid())
+    p = Process(target=run_proc, args=('test',))
+    print('Child process will start.')
+    p.start()
+    p.join()
+    print('Child process end.')
+```
+
+执行结果如下：
+
+```
+Parent process 928.
+Child process will start.
+Run child process test (929)...
+Process end.
+```
+
+#### Pool() 进程池
+
+如果要启动大量的子进程，可以用进程池的方式批量创建子进程：
+
+```
+from multiprocessing import Pool
+import os, time, random
+
+def long_time_task(name):
+    print('Run task %s (%s)...' % (name, os.getpid()))
+    start = time.time()
+    time.sleep(random.random() * 3)
+    end = time.time()
+    print('Task %s runs %0.2f seconds.' % (name, (end - start)))
+
+if __name__=='__main__':
+    print('Parent process %s.' % os.getpid())
+    p = Pool(4)
+    for i in range(5):
+        p.apply_async(long_time_task, args=(i,))
+    print('Waiting for all subprocesses done...')
+    p.close()
+    p.join()
+    print('All subprocesses done.')
+```
+
+执行结果如下：
+
+```
+Parent process 669.
+Waiting for all subprocesses done...
+Run task 0 (671)...
+Run task 1 (672)...
+Run task 2 (673)...
+Run task 3 (674)...
+Task 2 runs 0.14 seconds.
+Run task 4 (673)...
+Task 1 runs 0.27 seconds.
+Task 3 runs 0.86 seconds.
+Task 0 runs 1.41 seconds.
+Task 4 runs 1.91 seconds.
+All subprocesses done.
+```
+
+代码解读：
+
+对`Pool`对象调用`join()`方法会等待所有子进程执行完毕，调用`join()`之前必须先调用`close()`，调用`close()`之后就不能继续添加新的`Process`了。
+
+#### 控制子进程的输入和输出
+
+很多时候，子进程并不是自身，而是一个外部进程。我们创建了子进程后，还需要控制子进程的输入和输出。
+
+`subprocess`模块可以让我们非常方便地启动一个子进程，然后控制其输入和输出。
+
+#### 进程间通信
+
+### 多线程
+
+Python的标准库提供了两个模块：`_thread`和`threading`，`_thread`是低级模块，`threading`是高级模块，对`_thread`进行了封装。绝大多数情况下，我们只需要使用`threading`这个高级模块。
+
+#### Lock
+
+### ThreadLocal
+
+`ThreadLocal`最常用的地方就是为每个线程绑定一个数据库连接，HTTP请求，用户身份信息等，这样一个线程的所有调用到的处理函数都可以非常方便地访问这些资源。
+
+### 分布式进程
+
+Python的`multiprocessing`模块不但支持多进程，其中`managers`子模块还支持把多进程分布到多台机器上。一个服务进程可以作为调度者，将任务分布到其他多个进程中，依靠网络通信。由于`managers`模块封装很好，不必了解网络通信的细节，就可以很容易地编写分布式多进程程序。
+
+## 正则
+
+`re.match()`方法判断是否匹配，如果匹配成功，返回一个`Match`对象，否则返回`None`。
+
