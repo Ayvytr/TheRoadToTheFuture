@@ -393,9 +393,393 @@ True
 
 Python的`for`循环本质上就是通过不断调用`next()`函数实现的
 
+## 函数式编程
+
+### 高阶函数
+
+map
+
+reduce
+
+filter
+
+sorted
+
+### 返回函数
+
+关参数和变量都保存在返回的函数中，这种称为“闭包（Closure）”的程序结构拥有极大的威力。
+
+请再注意一点，当我们调用`lazy_sum()`时，每次调用都会返回一个新的函数。
+
+### 闭包
+
+注意到返回的函数在其定义内部引用了局部变量`args`，所以，当一个函数返回了一个函数后，其内部的局部变量还被新函数引用，所以，闭包用起来简单，实现起来可不容易。
+
+另一个需要注意的问题是，返回的函数并没有立刻执行，而是直到调用了`f()`才执行。我们来看一个例子：
+
+```
+def count():
+    fs = []
+    for i in range(1, 4):
+        def f():
+             return i*i
+        fs.append(f)
+    return fs
+
+f1, f2, f3 = count()
+```
+
+在上面的例子中，每次循环，都创建了一个新的函数，然后，把创建的3个函数都返回了。
+
+你可能认为调用`f1()`，`f2()`和`f3()`结果应该是`1`，`4`，`9`，但实际结果是：
+
+```
+>>> f1()
+9
+>>> f2()
+9
+>>> f3()
+9
+```
+
+全部都是`9`！原因就在于返回的函数引用了变量`i`，但它并非立刻执行。等到3个函数都返回时，它们所引用的变量`i`已经变成了`3`，因此最终结果为`9`。
+
+ 返回闭包时牢记一点：返回函数不要引用任何循环变量，或者后续会发生变化的变量。
+
+如果一定要引用循环变量怎么办？方法是再创建一个函数，用该函数的参数绑定循环变量当前的值，无论该循环变量后续如何更改，已绑定到函数参数的值不变：
+
+### 匿名函数
+
+在Python中，对匿名函数提供了有限支持。
+
+```
+>>> list(map(lambda x: x * x, [1, 2, 3, 4, 5, 6, 7, 8, 9]))
+[1, 4, 9, 16, 25, 36, 49, 64, 81]
+```
+
+可以把匿名函数作为返回值返回，比如：
+
+```
+def build(x, y):
+    return lambda: x * x + y * y
+```
+
+### 装饰器
+
+### 偏函数
+
+当函数的参数个数太多，需要简化时，使用`functools.partial`可以创建一个新的函数，这个新函数可以固定住原函数的部分参数，从而在调用时更简单。
+
+## 模块
+
+Python中，一个.py文件就称之为一个模块（Module）。
+
+请注意，每一个包目录下面都会有一个`__init__.py`的文件，这个文件是必须存在的，否则，Python就把这个目录当成普通目录，而不是一个包。`__init__.py`可以是空文件，也可以有Python代码，因为`__init__.py`本身就是一个模块，而它的模块名就是`mycompany`。
+
+类似`__xxx__`这样的变量是特殊变量，可以被直接引用，但是有特殊用途，比如上面的`__author__`，`__name__`就是特殊变量，`hello`模块定义的文档注释也可以用特殊变量`__doc__`访问，我们自己的变量一般不要用这种变量名；
+
+类似`_xxx`和`__xxx`这样的函数或变量就是非公开的（private），不应该被直接引用，比如`_abc`，`__abc`等；
+
+之所以我们说，private函数和变量“不应该”被直接引用，而不是“不能”被直接引用，是因为Python并没有一种方法可以完全限制访问private函数或变量，但是，从编程习惯上不应该引用private函数或变量。
+
+## 类
+
+```
+class Student(object):
+# 初始化函数
+    def __init__(self, name, score):
+    # 私有变量 不能直接访问__name是因为Python解释器对外把__name变量改成了_Student__name，所以，仍然可以通过_Student__name来访问__name变量
+        self.__name = name
+        self.__score = score
+
+    def print_score(self):
+        print('%s: %s' % (self.__name, self.__score))
+```
+
+以双下划线开头，并且以双下划线结尾的，是特殊变量，特殊变量是可以直接访问的，不是private变量
+
+### 获取对象信息
+
+type() 判断类型
+
+isinstance()  对于class的继承关系来说，使用`type()`就很不方便。我们要判断class的类型，可以使用`isinstance()`函数。
+
+dir() 获取对象所有属性和方法，它返回一个包含字符串的list
+
+```
+>>> dir('ABC')
+['__add__', '__class__',..., '__subclasshook__', 'capitalize', 'casefold',..., 'zfill']
+```
+
+### 实例属性和类属性
+
+由于Python是动态语言，根据类创建的实例可以任意绑定属性。
+
+给实例绑定属性的方法是通过实例变量，或者通过`self`变量：
+
+```
+class Student(object):
+    def __init__(self, name):
+        self.name = name
+
+s = Student('Bob')
+s.score = 90
+```
+
+## 面向对象高级编程
+
+### \__slots\__  
+
+限制该class实例能添加的属性：
+
+```
+class Student(object):
+    __slots__ = ('name', 'age') # 用tuple定义允许绑定的属性名称
+```
+
+### @property
+
+`@property`装饰器就是负责把一个方法变成属性调用的：
+
+```
+class Student(object):
+
+    @property
+    def score(self):
+        return self._score
+
+    @score.setter
+    def score(self, value):
+        if not isinstance(value, int):
+            raise ValueError('score must be an integer!')
+        if value < 0 or value > 100:
+            raise ValueError('score must between 0 ~ 100!')
+        self._score = value
+```
+
+### 特殊方法
+
+```
+# 直接显示变量调用的不是__str__()，而是__repr__()，两者的区别是__str__()返回用户看到的字符串，而__repr__()返回程序开发者看到的字符串，也就是说，__repr__()是为调试服务的。
+__str__
+__repr__
+__iter__ 用于for循环
+__getitem__ 实现下标或者切片操作
+__setitem__ 把对象视作list或dict来对集合赋值
+__delitem__ 删除某个元素
+__getattr__ 动态返回一个属性
+__call__ 直接对实例进行调用
+```
+
+### 枚举类
+
+```
+from enum import Enum
+
+Month = Enum('Month', ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+for name, member in Month.__members__.items():
+    print(name, '=>', member, ',', member.value)
+```
+
+如果需要更精确地控制枚举类型，可以从`Enum`派生出自定义类：
+
+```
+from enum import Enum, unique
+
+@unique
+class Weekday(Enum):
+    Sun = 0 # Sun的value被设定为0
+    Mon = 1
+    Tue = 2
+    Wed = 3
+    Thu = 4
+    Fri = 5
+    Sat = 6
+```
+
+`@unique`装饰器可以帮助我们检查保证没有重复值。
+
+### 元类
+
+`type()`函数既可以返回一个对象的类型，又可以创建出新的类型
+
+要创建一个class对象，`type()`函数依次传入3个参数：
+
+1. class的名称；
+2. 继承的父类集合，注意Python支持多重继承，如果只有一个父类，别忘了tuple的单元素写法；
+3. class的方法名称与函数绑定，这里我们把函数`fn`绑定到方法名`hello`上。
+
+通过`type()`函数创建的类和直接写class是完全一样的，因为Python解释器遇到class定义时，仅仅是扫描一下class定义的语法，然后调用`type()`函数创建出class。
+
+正常情况下，我们都用`class Xxx...`来定义类，但是，`type()`函数也允许我们动态创建出类来，也就是说，动态语言本身支持运行期动态创建类，这和静态语言有非常大的不同，要在静态语言运行期创建类，必须构造源代码字符串再调用编译器，或者借助一些工具生成字节码实现，本质上都是动态编译，会非常复杂。
+
+### metaclass
+
+## 异常处理和错误处理
+
+```
+try:
+    print('try...')
+    r = 10 / int('a')
+    print('result:', r)
+except ValueError as e:
+    print('ValueError:', e)
+except ZeroDivisionError as e:
+    print('ZeroDivisionError:', e)
+# 没有异常执行else
+else:
+    print('no error!')
+finally:
+    print('finally...')
+print('END')
+```
+
+```
+raise FooError('invalid value: %s' % s)
+```
+
+### logging记录错误
+
+如果不捕获错误，自然可以让Python解释器来打印出错误堆栈，但程序也被结束了。既然我们能捕获错误，就可以把错误堆栈打印出来，然后分析错误原因，同时，让程序继续执行下去。
+
+Python内置的`logging`模块可以非常容易地记录错误信息：
+
+```
+        logging.exception(e)
+```
+
+### assert
+
+断言失败，`assert`语句会抛出`AssertionError`。Python解释器时可以用`-O`参数来关闭`assert`
+
+```
+def foo(s):
+    n = int(s)
+    assert n != 0, 'n is zero!'
+    return 10 / n
+
+def main():
+    foo('0')
+```
 
 
-### 函数式编程
 
-#### 高阶函数
+## 单元测试
 
+
+
+编写一个测试类，从`unittest.TestCase`继承。
+
+以`test`开头的方法就是测试方法，不以`test`开头的方法不被认为是测试方法，测试的时候不会被执行。
+
+对每一类测试都需要编写一个`test_xxx()`方法。由于`unittest.TestCase`提供了很多内置的条件判断，我们只需要调用这些方法就可以断言输出是否是我们所期望的。最常用的断言就是`assertEqual()`
+
+```
+import unittest
+
+from mydict import Dict
+
+class TestDict(unittest.TestCase):
+
+    def test_init(self):
+        d = Dict(a=1, b='test')
+        self.assertEqual(d.a, 1)
+        self.assertEqual(d.b, 'test')
+        self.assertTrue(isinstance(d, dict))
+
+    def test_key(self):
+        d = Dict()
+        d['key'] = 'value'
+        self.assertEqual(d.key, 'value')
+
+    def test_attr(self):
+        d = Dict()
+        d.key = 'value'
+        self.assertTrue('key' in d)
+        self.assertEqual(d['key'], 'value')
+
+    def test_keyerror(self):
+        d = Dict()
+        with self.assertRaises(KeyError):
+            value = d['empty']
+
+    def test_attrerror(self):
+        d = Dict()
+        with self.assertRaises(AttributeError):
+            value = d.empty
+```
+
+`setUp()`和`tearDown()`方法。这两个方法会分别在每调用一个测试方法的前后分别被执行。
+
+## 文档测试
+
+## IO
+
+### 文件读写
+
+```
+>>> f = open('/Users/michael/test.txt', 'r')
+>>> f.read()
+'Hello, world!'
+>>> f.close()
+
+```
+
+
+
+```
+with open('/path/to/file', 'r') as f:
+    print(f.read())
+```
+
+
+
+### StringIO BytesIO
+
+StringIO 内存中读写str
+
+BytesIO 内存中读写二进制数据
+
+
+
+### 文件操作
+
+os.environ 环境变量
+
+```
+# 查看当前目录的绝对路径:
+>>> os.path.abspath('.')
+'/Users/michael'
+# 在某个目录下创建一个新目录，首先把新目录的完整路径表示出来:
+>>> os.path.join('/Users/michael', 'testdir')
+'/Users/michael/testdir'
+# 然后创建一个目录:
+>>> os.mkdir('/Users/michael/testdir')
+# 删掉一个目录:
+>>> os.rmdir('/Users/michael/testdir')
+```
+
+os.path.join() 合并路径
+
+### 序列化
+
+```。
+pickle.dumps
+pickle.dump
+pickle.load
+```
+
+#### json 
+
+```
+json.dumps
+json.loads
+```
+
+json反序列化成对象
+
+```
+>>> json_str = '{"age": 20, "score": 88, "name": "Bob"}'
+>>> print(json.loads(json_str, object_hook=dict2student))
+<__main__.Student object at 0x10cd3c190>
+```
