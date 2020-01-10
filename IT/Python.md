@@ -920,3 +920,286 @@ Python的`multiprocessing`模块不但支持多进程，其中`managers`子模�
 
 `re.match()`方法判断是否匹配，如果匹配成功，返回一个`Match`对象，否则返回`None`。
 
+## 常用模块
+
+### datetime
+
+```
+>>> from datetime import datetime
+>>> now = datetime.now() # 获取当前datetime
+>>> print(now)
+2015-05-18 16:28:07.198690
+>>> print(type(now))
+<class 'datetime.datetime'>
+
+>>> dt = datetime(2015, 4, 19, 12, 20) # 用指定日期时间创建datetime
+>>> print(dt)
+2015-04-19 12:20:00
+```
+
+datetime转换为timestamp
+
+我们把1970年1月1日 00:00:00 UTC+00:00时区的时刻称为epoch time，记为`0`（1970年以前的时间timestamp为负数），当前时间就是相对于epoch time的秒数，称为timestamp。
+
+```
+>>> from datetime import datetime
+>>> dt = datetime(2015, 4, 19, 12, 20) # 用指定日期时间创建datetime
+>>> dt.timestamp() # 把datetime转换为timestamp
+1429417200.0
+```
+
+timestamp转换为datetime
+
+```
+>>> from datetime import datetime
+>>> t = 1429417200.0
+>>> print(datetime.fromtimestamp(t))
+2015-04-19 12:20:00
+```
+
+str转换为datetime
+
+```
+>>> from datetime import datetime
+>>> cday = datetime.strptime('2015-6-1 18:19:59', '%Y-%m-%d %H:%M:%S')
+>>> print(cday)
+2015-06-01 18:19:59
+```
+
+datetime转换为str
+
+```
+>>> from datetime import datetime
+>>> cday = datetime.strptime('2015-6-1 18:19:59', '%Y-%m-%d %H:%M:%S')
+>>> print(cday)
+2015-06-01 18:19:59
+```
+
+datetime转换为str
+
+```
+>>> from datetime import datetime
+>>> now = datetime.now()
+>>> print(now.strftime('%a, %b %d %H:%M'))
+Mon, May 05 16:28
+```
+
+datetime加减
+
+对日期和时间进行加减实际上就是把datetime往后或往前计算，得到新的datetime。加减可以直接用`+`和`-`运算符，不过需要导入`timedelta`这个类：
+
+```
+>>> from datetime import datetime, timedelta
+>>> now = datetime.now()
+>>> now
+datetime.datetime(2015, 5, 18, 16, 57, 3, 540997)
+>>> now + timedelta(hours=10)
+datetime.datetime(2015, 5, 19, 2, 57, 3, 540997)
+>>> now - timedelta(days=1)
+datetime.datetime(2015, 5, 17, 16, 57, 3, 540997)
+>>> now + timedelta(days=2, hours=12)
+datetime.datetime(2015, 5, 21, 4, 57, 3, 540997)
+```
+
+时区转换
+
+我们可以先通过`utcnow()`拿到当前的UTC时间，再转换为任意时区的时间：
+
+```
+# 拿到UTC时间，并强制设置时区为UTC+0:00:
+>>> utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+>>> print(utc_dt)
+2015-05-18 09:05:12.377316+00:00
+# astimezone()将转换时区为北京时间:
+>>> bj_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
+>>> print(bj_dt)
+2015-05-18 17:05:12.377316+08:00
+# astimezone()将转换时区为东京时间:
+>>> tokyo_dt = utc_dt.astimezone(timezone(timedelta(hours=9)))
+>>> print(tokyo_dt)
+2015-05-18 18:05:12.377316+09:00
+# astimezone()将bj_dt转换时区为东京时间:
+>>> tokyo_dt2 = bj_dt.astimezone(timezone(timedelta(hours=9)))
+>>> print(tokyo_dt2)
+2015-05-18 18:05:12.377316+09:00
+```
+
+
+
+### collections
+
+#### namedtuple
+
+#### deque 
+
+deque是为了高效实现插入和删除操作的双向列表，适合用于队列和栈
+
+`deque`除了实现list的`append()`和`pop()`外，还支持`appendleft()`和`popleft()`，这样就可以非常高效地往头部添加或删除元素。
+
+#### defaultdict
+
+使用`dict`时，如果引用的Key不存在，就会抛出`KeyError`。如果希望key不存在时，返回一个默认值，就可以用`defaultdict`：
+
+```
+>>> from collections import defaultdict
+>>> dd = defaultdict(lambda: 'N/A')
+>>> dd['key1'] = 'abc'
+>>> dd['key1'] # key1存在
+'abc'
+>>> dd['key2'] # key2不存在，返回默认值
+'N/A'
+```
+
+#### OrderedDict 保证key的顺序
+
+#### ChainMap
+
+`ChainMap`可以把一组`dict`串起来并组成一个逻辑上的`dict`。`ChainMap`本身也是一个dict，但是查找的时候，会按照顺序在内部的dict依次查找。
+
+#### Counter
+
+`Counter`是一个简单的计数器，例如，统计字符出现的个数：
+
+```
+>>> from collections import Counter
+>>> c = Counter()
+>>> for ch in 'programming':
+...     c[ch] = c[ch] + 1
+...
+>>> c
+Counter({'g': 2, 'm': 2, 'r': 2, 'a': 1, 'i': 1, 'o': 1, 'n': 1, 'p': 1})
+>>> c.update('hello') # 也可以一次性update
+>>> c
+Counter({'r': 2, 'o': 2, 'g': 2, 'm': 2, 'l': 2, 'p': 1, 'a': 1, 'i': 1, 'n': 1, 'h': 1, 'e': 1})
+```
+
+`Counter`实际上也是`dict`的一个子类，上面的结果可以看出每个字符出现的次数。
+
+### base64
+
+### struct
+
+### hashlib
+
+### hmac
+
+### itertools
+
+* cycle()
+* repeat()
+
+* chain
+
+* groupBy
+
+### context
+
+并不是只有`open()`函数返回的fp对象才能使用`with`语句。实际上，任何对象，只要正确实现了上下文管理，就可以用于`with`语句。实现上下文管理是通过`__enter__`和`__exit__`这两个方法实现的。
+
+#### @contextmanager
+
+编写`__enter__`和`__exit__`仍然很繁琐，因此Python的标准库`contextlib`提供了更简单的写法
+
+```
+from contextlib import contextmanager
+
+class Query(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def query(self):
+        print('Query info about %s...' % self.name)
+
+@contextmanager
+def create_query(name):
+    print('Begin')
+    q = Query(name)
+    yield q
+    print('End')
+```
+
+#### @closing
+
+如果一个对象没有实现上下文，我们就不能把它用于`with`语句。这个时候，可以用`closing()`来把该对象变为上下文对象。例如，用`with`语句使用`urlopen()`：
+
+```
+from contextlib import closing
+from urllib.request import urlopen
+
+with closing(urlopen('https://www.python.org')) as page:
+    for line in page:
+        print(line)
+```
+
+`closing`也是一个经过@contextmanager装饰的generator，这个generator编写起来其实非常简单：
+
+```
+@contextmanager
+def closing(thing):
+    try:
+        yield thing
+    finally:
+        thing.close()
+```
+
+它的作用就是把任意对象变为上下文对象，并支持`with`语句。
+
+`@contextlib`还有一些其他decorator，便于我们编写更简洁的代码。
+
+### urllib
+
+### xml
+
+### HTMLParser
+
+## 常用第三方模块
+
+### pillow
+
+### requests
+
+### chardet
+
+字符串编码一直是令人非常头疼的问题，尤其是我们在处理一些不规范的第三方网页的时候。虽然Python提供了Unicode表示的`str`和`bytes`两种数据类型，并且可以通过`encode()`和`decode()`方法转换，但是，在不知道编码的情况下，对`bytes`做`decode()`不好做。
+
+对于未知编码的`bytes`，要把它转换成`str`，需要先“猜测”编码。猜测的方式是先收集各种编码的特征字符，根据特征字符判断，就能有很大概率“猜对”。
+
+当然，我们肯定不能从头自己写这个检测编码的功能，这样做费时费力。chardet这个第三方库正好就派上了用场。用它来检测编码，简单易用。
+
+chardet检测编码，只需要一行代码：
+
+```
+>>> chardet.detect(b'Hello, world!')
+{'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+```
+
+### psutil
+
+顾名思义，psutil = process and system utilities，它不仅可以通过一两行代码实现系统监控，还可以跨平台使用，支持Linux／UNIX／OSX／Windows等，是系统管理员和运维小伙伴不可或缺的必备模块。
+
+## virtualenv
+
+每个应用可能需要各自拥有一套“独立”的Python运行环境。virtualenv就是用来为一个应用创建一套“隔离”的Python运行环境。
+
+## 网络编程 socket
+
+## 电子邮件
+
+### smtp发送
+
+Python对SMTP支持有`smtplib`和`email`两个模块，`email`负责构造邮件，`smtplib`负责发送邮件。
+
+### pop3收取
+
+注意到POP3协议收取的不是一个已经可以阅读的邮件本身，而是邮件的原始文本，这和SMTP协议很像，SMTP发送的也是经过编码后的一大段文本。
+
+要把POP3收取的文本变成可以阅读的邮件，还需要用`email`模块提供的各种类来解析原始文本，变成可阅读的邮件对象。
+
+Python内置一个`poplib`模块，实现了POP3协议，可以直接用来收邮件。
+
+所以，收取邮件分两步：
+
+第一步：用`poplib`把邮件的原始文本下载到本地；
+
+第二部：用`email`解析原始文本，还原为邮件对象。
